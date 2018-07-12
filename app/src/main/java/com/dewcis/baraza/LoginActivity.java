@@ -138,7 +138,7 @@ public class LoginActivity extends AppCompatActivity  {
 
     public void registerForm() {
         Intent formActivity = new Intent(this, FormActivity.class);
-        formActivity.putExtra("view", "1:0");
+        formActivity.putExtra("viewLink", "1");
         startActivity(formActivity);
     }
 

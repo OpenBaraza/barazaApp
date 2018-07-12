@@ -62,7 +62,10 @@ public class FormField {
         try{
             fieldName = jsonObject.getString("name");
             typeId = jsonObject.getInt("type");
-            String title = jsonObject.getString("title");
+            String title = null;
+            if(jsonObject.has("title")) { title = jsonObject.getString("title"); }
+            else if(jsonObject.has("tab")) { title = jsonObject.getString("tab"); }
+            else { title = ""; }
 
 		    switch(typeId) {
 		        case 0:     // TEXTFIELD
@@ -149,6 +152,8 @@ public class FormField {
     }
 
     public String getValue() {
+
+        System.out.println("BASE 4040 : " + fieldName);
 
         String value = null;
         switch(typeId) {
