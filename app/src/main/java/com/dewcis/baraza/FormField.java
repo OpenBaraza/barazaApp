@@ -62,10 +62,9 @@ public class FormField {
         try{
             fieldName = jsonObject.getString("name");
             typeId = jsonObject.getInt("type");
-            String title = null;
+            String title = "";
             if(jsonObject.has("title")) { title = jsonObject.getString("title"); }
             else if(jsonObject.has("tab")) { title = jsonObject.getString("tab"); }
-            else { title = ""; }
 
 		    switch(typeId) {
 		        case 0:     // TEXTFIELD
