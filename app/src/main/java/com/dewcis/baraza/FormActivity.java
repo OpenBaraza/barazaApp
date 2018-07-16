@@ -5,6 +5,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -46,18 +47,15 @@ public class FormActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_form);
 
-        Toolbar myToolbar = findViewById(R.id.formToolbar);
-        setSupportActionBar(myToolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
-
         viewContainer = findViewById(R.id.viewContainer);
         formFields = new HashMap<String, FormField>();
 
+        String viewName = "Form";
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             accessToken = extras.getString("accessToken");
             viewLink = extras.getString("viewLink") + ":0";
+            //viewName = extras.getString("viewName");  // I need to get the form name
             System.out.println("BASE 2010 " + accessToken);
 
             if(accessToken == null) {
@@ -69,6 +67,12 @@ public class FormActivity extends AppCompatActivity {
                 makeForm(jBody);
             }
         }
+
+        // Place toolbar
+        Toolbar myToolbar = findViewById(R.id.formToolbar);
+        setSupportActionBar(myToolbar);
+        getSupportActionBar().setTitle(viewName);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         Button btnSaveForm = findViewById(R.id.saveButton);
         btnSaveForm.setOnClickListener(new View.OnClickListener() {
@@ -126,5 +130,11 @@ public class FormActivity extends AppCompatActivity {
 
         // Return to calling table
         finish();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        finish();
+        return true;
     }
 }

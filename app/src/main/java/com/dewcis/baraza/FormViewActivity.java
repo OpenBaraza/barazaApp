@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -33,16 +34,12 @@ public class FormViewActivity extends AppCompatActivity {
 
         gTableLayout = findViewById(R.id.formViewLayout);
 
-        Toolbar myToolbar = findViewById(R.id.formViewToolbar);
-        setSupportActionBar(myToolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
-
-
+        String viewName = "Form View";
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             accessToken = extras.getString("accessToken");
             viewLink = extras.getString("viewLink");
+            viewName = extras.getString("viewName");
             System.out.println("BASE 2010 " + accessToken);
 
             JSONObject jBody = DataClient.makeJSONRequest(accessToken, viewLink, "read", "{}");
@@ -50,6 +47,11 @@ public class FormViewActivity extends AppCompatActivity {
             makeTable(jBody);
         }
 
+        // Place toolbar
+        Toolbar myToolbar = findViewById(R.id.formViewToolbar);
+        setSupportActionBar(myToolbar);
+        getSupportActionBar().setTitle(viewName);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     public void makeTable(JSONObject jBody) {
@@ -98,9 +100,14 @@ public class FormViewActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater MI=getMenuInflater();
-        MI.inflate(R.menu.my_options_menu, menu);
+        MenuInflater MI = getMenuInflater();
+
         return true;
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        finish();
+        return true;
+    }
 }

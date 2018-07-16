@@ -53,6 +53,8 @@ public class MainDesk extends AppCompatActivity {
         NavigationView navigationView = findViewById(R.id.navigation);
         Menu menu = navigationView.getMenu();
 
+        System.out.println("BASE 2005 " + accessToken);
+
         Bundle extras = getIntent().getExtras();
         if(extras != null) {
             accessToken = extras.getString("accessToken");
@@ -105,12 +107,17 @@ public class MainDesk extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if(ABT.onOptionsItemSelected(item)) {
+        if(ABT.onOptionsItemSelected(item)) return true;
 
+        // logout of the application
+        if(item.getItemId()==R.id.logout) {
+            finish();
             return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
+
 
     public void openMenu(MenuItem menuItem) {
         System.out.println("BASE 2030 " + menuItem.getItemId());
@@ -123,23 +130,27 @@ public class MainDesk extends AppCompatActivity {
 
         try {
             int viewType = jBody.getInt("typeId");
+            String viewName = jBody.getString("name");
             switch (viewType) {
                 case 8:         // Form view
                     Intent formViewActivity = new Intent(this, FormViewActivity.class);
                     formViewActivity.putExtra("accessToken", accessToken);
                     formViewActivity.putExtra("viewLink", viewLink);
+                    formViewActivity.putExtra("viewName", viewName);
                     startActivity(formViewActivity);
                     break;
                 case 9:         // Grid view
                     Intent tableActivity = new Intent(this, TableActivity.class);
                     tableActivity.putExtra("accessToken", accessToken);
                     tableActivity.putExtra("viewLink", viewLink);
+                    tableActivity.putExtra("viewName", viewName);
                     startActivity(tableActivity);
                     break;
                 case 10:        // HTML report view
                     Intent reportActivity = new Intent(this, ReportActivity.class);
                     reportActivity.putExtra("accessToken", accessToken);
                     reportActivity.putExtra("viewLink", viewLink);
+                    reportActivity.putExtra("viewName", viewName);
                     startActivity(reportActivity);
                     break;
             }

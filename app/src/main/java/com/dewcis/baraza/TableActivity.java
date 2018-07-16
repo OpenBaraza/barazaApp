@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -45,6 +46,9 @@ public class TableActivity extends AppCompatActivity {
     List<Integer> actionList = null;
     Map<String, CheckBox> actionBoxes = null;
 
+    JSONArray jGrid = null;
+    JSONArray jViews = null;
+
     RelativeLayout tableRelativeView;
     TableLayout gTableLayout;
     Spinner actionSpinner;
@@ -57,10 +61,25 @@ public class TableActivity extends AppCompatActivity {
         tableRelativeView = findViewById(R.id.tableRelativeView);
         gTableLayout = findViewById(R.id.tableLayout);
 
+        String viewName = "Table";
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            accessToken = extras.getString("accessToken");
+            viewLink = extras.getString("viewLink");
+            viewName = extras.getString("viewName");
+            System.out.println("BASE 2010 " + accessToken);
+
+            JSONObject jBody = DataClient.makeJSONRequest(accessToken, viewLink, "grid", "{}");
+
+            // build the grid defination
+            getGridDef(jBody);
+        }
+
+        // Place toolbar
         Toolbar myToolbar = findViewById(R.id.tableToolbar);
         setSupportActionBar(myToolbar);
+        getSupportActionBar().setTitle(viewName);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
 
         FloatingActionButton btnAddForm = findViewById(R.id.btNewForm);
         btnAddForm.setOnClickListener(new View.OnClickListener() {
@@ -69,17 +88,19 @@ public class TableActivity extends AppCompatActivity {
             }
         });
 
-        Bundle extras = getIntent().getExtras();
-        if (extras != null) {
-            accessToken = extras.getString("accessToken");
-            viewLink = extras.getString("viewLink");
-            System.out.println("BASE 2010 " + accessToken);
+    }
 
-            JSONObject jBody = DataClient.makeJSONRequest(accessToken, viewLink, "read", "{}");
-            makeTable(jBody);
+    public void getGridDef(JSONObject jBody) {
+        try {
+            jGrid = jBody.getJSONArray("grid");
 
             // Add the action buttons if there are there
             if(jBody.has("actions")) makeActions(jBody);
+
+            // Add the sub grids
+            if(jBody.has("views")) jViews= jBody.getJSONArray("views");
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
 
@@ -93,7 +114,6 @@ public class TableActivity extends AppCompatActivity {
         gTableLayout.removeAllViews();
 
         try {
-            JSONArray jGrid = jBody.getJSONArray("grid");
             tableTitle(jGrid);
 
             if(jBody.has("data")) {
@@ -242,8 +262,29 @@ public class TableActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater MI=getMenuInflater();
-        MI.inflate(R.menu.my_options_menu, menu);
+
+        if(jViews != null) {
+            try {
+                for(int i = 0; i < jViews.length(); i++) {
+                    JSONObject JView = jViews.getJSONObject(i);
+                    String viewName = JView.getString("name");
+                    menu.add(0, i, Menu.NONE, viewName);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        System.out.println("BASE 1030 - Making menu");
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        System.out.println("BASE 1010 - tool bar press " + item.getItemId());
+        finish();
         return true;
     }
 
