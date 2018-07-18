@@ -6,7 +6,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,6 +41,7 @@ public class TableActivity extends AppCompatActivity {
 
     String accessToken = null;
     String viewLink = null;
+    String linkValue = null;
     Map<Integer, String> keyMap = null;
     List<Integer> actionList = null;
     Map<String, CheckBox> actionBoxes = null;
@@ -67,6 +67,7 @@ public class TableActivity extends AppCompatActivity {
             accessToken = extras.getString("accessToken");
             viewLink = extras.getString("viewLink");
             viewName = extras.getString("viewName");
+            linkValue = extras.getString("linkValue");
             System.out.println("BASE 2010 " + accessToken);
 
             JSONObject jBody = DataClient.makeJSONRequest(accessToken, viewLink, "grid", "{}");
@@ -106,7 +107,9 @@ public class TableActivity extends AppCompatActivity {
 
     // Recreate the table
     public void refreshTable() {
-        JSONObject jBody = DataClient.makeJSONRequest(accessToken, viewLink, "read", "{}");
+        String myLink = viewLink;
+        if(linkValue != null) myLink = viewLink + "&linkdata=" + linkValue;
+        JSONObject jBody = DataClient.makeJSONRequest(accessToken, myLink, "read", "{}");
         makeTable(jBody);
     }
 
@@ -114,18 +117,18 @@ public class TableActivity extends AppCompatActivity {
         gTableLayout.removeAllViews();
 
         try {
-            tableTitle(jGrid);
+            tableTitle();
 
             if(jBody.has("data")) {
                 JSONArray jData = jBody.getJSONArray("data");
-                tableData(jGrid, jData);
+                tableData(jData);
             }
         } catch(JSONException ex) {
             ex.printStackTrace();
         }
     }
 
-    public void tableTitle(JSONArray jGrid) {
+    public void tableTitle() {
         TableRow tbTitle = new TableRow(this);
 
         try {
@@ -148,7 +151,7 @@ public class TableActivity extends AppCompatActivity {
         gTableLayout.addView(tbTitle);
     }
 
-    public void tableData(JSONArray jGrid, JSONArray jData) {
+    public void tableData(JSONArray jData) {
         keyMap = new HashMap<Integer, String>();
         actionBoxes = new HashMap<String, CheckBox>();
 
@@ -262,7 +265,6 @@ public class TableActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-
         if(jViews != null) {
             try {
                 for(int i = 0; i < jViews.length(); i++) {
@@ -273,7 +275,6 @@ public class TableActivity extends AppCompatActivity {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-
         }
 
         System.out.println("BASE 1030 - Making menu");
@@ -282,10 +283,67 @@ public class TableActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        System.out.println("BASE 1010 - tool bar press " + item.getItemId());
-        finish();
+    public boolean onOptionsItemSelected(MenuItem menuItem) {
+        System.out.println("BASE 1010 - tool bar press " + menuItem.getItemId());
+
+        if (menuItem.getItemId() < jViews.length()) {
+            String selectedValue = getSelectedValue();
+            if(selectedValue != null) openMenu(menuItem, selectedValue);
+        } else {
+            finish();
+        }
+
         return true;
+    }
+
+    public void openMenu(MenuItem menuItem, String selectedValue) {
+        System.out.println("BASE 2030 " + menuItem.getItemId());
+
+        String newLink = viewLink + ":" + menuItem.getItemId();
+        String rBody = DataClient.makeSecuredRequest(accessToken, newLink, "view", "{}");
+        JSONObject jBody = DataClient.getJObject(rBody);
+
+        System.out.println("BASE 2040 " + selectedValue + " : " + rBody);
+
+        try {
+            int viewType = jBody.getInt("typeId");
+            String viewName = jBody.getString("name");
+            switch (viewType) {
+                case 8:         // Form view
+                    Intent formViewActivity = new Intent(this, FormViewActivity.class);
+                    formViewActivity.putExtra("accessToken", accessToken);
+                    formViewActivity.putExtra("viewLink", newLink);
+                    formViewActivity.putExtra("viewName", viewName);
+                    formViewActivity.putExtra("linkValue", selectedValue);
+                    startActivity(formViewActivity);
+                    break;
+                case 9:         // Grid view
+                    Intent tableActivity = new Intent(this, TableActivity.class);
+                    tableActivity.putExtra("accessToken", accessToken);
+                    tableActivity.putExtra("viewLink", newLink);
+                    tableActivity.putExtra("viewName", viewName);
+                    tableActivity.putExtra("linkValue", selectedValue);
+                    startActivity(tableActivity);
+                    break;
+                case 10:        // HTML report view
+                    Intent reportActivity = new Intent(this, ReportActivity.class);
+                    reportActivity.putExtra("accessToken", accessToken);
+                    reportActivity.putExtra("viewLink", newLink);
+                    reportActivity.putExtra("viewName", viewName);
+                    reportActivity.putExtra("linkValue", selectedValue);
+                    startActivity(reportActivity);
+                    break;
+            }
+        } catch (JSONException ex) {
+            System.out.println("JSON Menu error " + ex);
+        }
+    }
+
+    private String getSelectedValue() {
+        for (String key : actionBoxes.keySet()) {
+            if (actionBoxes.get(key).isChecked()) return key;
+        }
+        return null;
     }
 
     @Override
