@@ -20,9 +20,9 @@ import okhttp3.Response;
  */
 
 public class DataClient {
-    public static String url = "http://192.168.122.1:9090/banking/dataserver";
+    //public static String url = "http://192.168.122.1:9090/banking/dataserver";
     //public static String url = "https://demo.dewcis.com/hr/dataserver";
-    //public static String url = "https://demo.dewcis.com/banking/dataserver";
+    public static String url = "https://demo.dewcis.com/banking/dataserver";
 
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
