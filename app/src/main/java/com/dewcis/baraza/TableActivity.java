@@ -298,51 +298,18 @@ public class TableActivity extends AppCompatActivity {
 
     public void openMenu(MenuItem menuItem, String selectedValue) {
         System.out.println("BASE 2030 " + menuItem.getItemId());
-
         String newLink = viewLink + ":" + menuItem.getItemId();
-        String rBody = DataClient.makeSecuredRequest(accessToken, newLink, "view", "{}");
-        JSONObject jBody = DataClient.getJObject(rBody);
+        DataClient.StartIntent(this,newLink,accessToken,selectedValue);
 
-        System.out.println("BASE 2040 " + selectedValue + " : " + rBody);
-
-        try {
-            int viewType = jBody.getInt("typeId");
-            String viewName = jBody.getString("name");
-            switch (viewType) {
-                case 8:         // Form view
-                    Intent formViewActivity = new Intent(this, FormViewActivity.class);
-                    formViewActivity.putExtra("accessToken", accessToken);
-                    formViewActivity.putExtra("viewLink", newLink);
-                    formViewActivity.putExtra("viewName", viewName);
-                    formViewActivity.putExtra("linkValue", selectedValue);
-                    startActivity(formViewActivity);
-                    break;
-                case 9:         // Grid view
-                    Intent tableActivity = new Intent(this, TableActivity.class);
-                    tableActivity.putExtra("accessToken", accessToken);
-                    tableActivity.putExtra("viewLink", newLink);
-                    tableActivity.putExtra("viewName", viewName);
-                    tableActivity.putExtra("linkValue", selectedValue);
-                    startActivity(tableActivity);
-                    break;
-                case 10:        // HTML report view
-                    Intent reportActivity = new Intent(this, ReportActivity.class);
-                    reportActivity.putExtra("accessToken", accessToken);
-                    reportActivity.putExtra("viewLink", newLink);
-                    reportActivity.putExtra("viewName", viewName);
-                    reportActivity.putExtra("linkValue", selectedValue);
-                    startActivity(reportActivity);
-                    break;
-            }
-        } catch (JSONException ex) {
-            System.out.println("JSON Menu error " + ex);
-        }
     }
 
     private String getSelectedValue() {
-        for (String key : actionBoxes.keySet()) {
-            if (actionBoxes.get(key).isChecked()) return key;
+        if(actionBoxes!=null && !actionBoxes.isEmpty()){
+            for (String key : actionBoxes.keySet()) {
+                if (actionBoxes.get(key).isChecked()) return key;
+            }
         }
+        Toast.makeText(this,"Sorry but you cannot use this feature without making a slection",Toast.LENGTH_LONG).show();
         return null;
     }
 
