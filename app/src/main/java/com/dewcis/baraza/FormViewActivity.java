@@ -18,6 +18,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+
 /**
  * Created by Dennis Gichangi on 3/29/2018.
  * Update by Joseph Onalo
@@ -49,6 +51,7 @@ public class FormViewActivity extends AppCompatActivity {
             System.out.println("BASE 2010 " + accessToken);
 
             JSONObject jBody = DataClient.makeJSONRequest(accessToken, viewLink, "grid", "{}");
+            System.out.println("BASE 2011 Form input " + jBody.toString());
 
             getGridDef(jBody);
         }
@@ -58,6 +61,9 @@ public class FormViewActivity extends AppCompatActivity {
         setSupportActionBar(myToolbar);
         getSupportActionBar().setTitle(viewName);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+    public void EditDefinitions(JSONObject jBody){
+
     }
 
     public void getGridDef(JSONObject jBody) {
@@ -70,6 +76,8 @@ public class FormViewActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+
 
     // Recreate the table
     public void refreshTable() {
@@ -155,46 +163,15 @@ public class FormViewActivity extends AppCompatActivity {
     }
 
     public void openMenu(MenuItem menuItem, String selectedValue) {
-        System.out.println("BASE 2030 " + menuItem.getItemId());
-
         String newLink = viewLink + ":" + menuItem.getItemId();
-        String rBody = DataClient.makeSecuredRequest(accessToken, newLink, "view", "{}");
-        JSONObject jBody = DataClient.getJObject(rBody);
+        HashMap<String,String> Map=new HashMap<>();
 
-        System.out.println("BASE 2040 " + selectedValue + " : " + rBody);
-
-        try {
-            int viewType = jBody.getInt("typeId");
-            String viewName = jBody.getString("name");
-            switch (viewType) {
-                case 8:         // Form view
-                    Intent formViewActivity = new Intent(this, FormViewActivity.class);
-                    formViewActivity.putExtra("accessToken", accessToken);
-                    formViewActivity.putExtra("viewLink", newLink);
-                    formViewActivity.putExtra("viewName", viewName);
-                    formViewActivity.putExtra("linkValue", selectedValue);
-                    startActivity(formViewActivity);
-                    break;
-                case 9:         // Grid view
-                    Intent tableActivity = new Intent(this, TableActivity.class);
-                    tableActivity.putExtra("accessToken", accessToken);
-                    tableActivity.putExtra("viewLink", newLink);
-                    tableActivity.putExtra("viewName", viewName);
-                    tableActivity.putExtra("linkValue", selectedValue);
-                    startActivity(tableActivity);
-                    break;
-                case 10:        // HTML report view
-                    Intent reportActivity = new Intent(this, ReportActivity.class);
-                    reportActivity.putExtra("accessToken", accessToken);
-                    reportActivity.putExtra("viewLink", newLink);
-                    reportActivity.putExtra("viewName", viewName);
-                    reportActivity.putExtra("linkValue", selectedValue);
-                    startActivity(reportActivity);
-                    break;
-            }
-        } catch (JSONException ex) {
-            System.out.println("JSON Menu error " + ex);
-        }
+        Map.put("viewLink",newLink);
+        Map.put("accessToken",accessToken);
+        if (linkValue != null){
+            Map.put("keyValue",selectedValue);
+            Map.put("linkValue",linkValue);}
+        DataClient.StartIntent(this,Map);
     }
 
     @Override

@@ -3,20 +3,19 @@ package com.dewcis.baraza;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.PersistableBundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
-import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.TextView;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -24,16 +23,20 @@ import org.json.JSONObject;
 
 import com.dewcis.baraza.Utils.DataClient;
 
+import java.util.HashMap;
+
 /**
  * Created by Dennis Gichangi on 3/29/2018.
  * Update by Joseph Onalo
  */
 
-public class MainDesk extends AppCompatActivity {
+public class MainDesk extends AppCompatActivity implements View.OnClickListener {
 
     private DrawerLayout mDrawerLayout;
     ActionBarDrawerToggle ABT;
-    String accessToken = null;
+    String accessToken = null,AppType=null;
+    LinearLayout Accounts,Loan,transfer,Commodity;
+    public String AccountView,CommodityView,LoanView,TransfersView;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,9 +44,25 @@ public class MainDesk extends AppCompatActivity {
 
         mDrawerLayout = findViewById(R.id.drawer_layout) ;
 
+        Accounts=(LinearLayout)findViewById(R.id.AccountButton);
+        Loan=(LinearLayout) findViewById(R.id.LoanButton);
+        transfer=(LinearLayout)findViewById(R.id.TransferButton);
+        Commodity=(LinearLayout)findViewById(R.id.CommodityButton);
+
+
+
+        Bundle extras = getIntent().getExtras();
+        if(extras != null) {
+            accessToken = extras.getString("accessToken");
+            AppType=extras.getString("Portal");
+            System.out.println("BASE 2010 " + accessToken);
+        }
+
+
         Toolbar myToolbar = findViewById(R.id.HomeToolBar);
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle(AppType);
         getSupportActionBar().setHomeButtonEnabled(true);
 
         ABT = new ActionBarDrawerToggle(this, mDrawerLayout, myToolbar, R.string.open, R.string.close);
@@ -55,16 +74,22 @@ public class MainDesk extends AppCompatActivity {
 
         System.out.println("BASE 2005 " + accessToken);
 
-        Bundle extras = getIntent().getExtras();
-        if(extras != null) {
-            accessToken = extras.getString("accessToken");
-            System.out.println("BASE 2010 " + accessToken);
-        }
+
 
         String rBody = DataClient.makeSecuredRequest(accessToken, "view=0:0", "menu", "{}");
         JSONObject jBody = DataClient.getJObject(rBody);
+
+        if(AppType.equals("Banking")){prepareDashboard(jBody);}
+        else{
+            Accounts.setVisibility(View.GONE);
+            Loan.setVisibility(View.GONE);
+            transfer.setVisibility(View.GONE);
+            Commodity.setVisibility(View.GONE);
+        }
+
         try {
             JSONArray jMenu = jBody.getJSONArray("menu");
+
             for (int i = 0; i < jMenu.length(); i++) {
                 JSONObject menuItem = jMenu.getJSONObject(i);
                 menu.add(0, menuItem.getInt("key"),Menu.NONE, menuItem.getString("name"));
@@ -108,55 +133,75 @@ public class MainDesk extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(ABT.onOptionsItemSelected(item)) return true;
-
-        // logout of the application
         if(item.getItemId()==R.id.logout) {
             finish();
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
 
     public void openMenu(MenuItem menuItem) {
-        System.out.println("BASE 2030 " + menuItem.getItemId());
-
         String viewLink = menuItem.getItemId() + ":0";
-        String rBody = DataClient.makeSecuredRequest(accessToken, viewLink, "view", "{}");
-        JSONObject jBody = DataClient.getJObject(rBody);
-
-        System.out.println("BASE 2040 " + rBody);
-
-        try {
-            int viewType = jBody.getInt("typeId");
-            String viewName = jBody.getString("name");
-            switch (viewType) {
-                case 8:         // Form view
-                    Intent formViewActivity = new Intent(this, FormViewActivity.class);
-                    formViewActivity.putExtra("accessToken", accessToken);
-                    formViewActivity.putExtra("viewLink", viewLink);
-                    formViewActivity.putExtra("viewName", viewName);
-                    startActivity(formViewActivity);
-                    break;
-                case 9:         // Grid view
-                    Intent tableActivity = new Intent(this, TableActivity.class);
-                    tableActivity.putExtra("accessToken", accessToken);
-                    tableActivity.putExtra("viewLink", viewLink);
-                    tableActivity.putExtra("viewName", viewName);
-                    startActivity(tableActivity);
-                    break;
-                case 10:        // HTML report view
-                    Intent reportActivity = new Intent(this, ReportActivity.class);
-                    reportActivity.putExtra("accessToken", accessToken);
-                    reportActivity.putExtra("viewLink", viewLink);
-                    reportActivity.putExtra("viewName", viewName);
-                    startActivity(reportActivity);
-                    break;
-            }
-        } catch (JSONException ex) {
-            System.out.println("JSON Menu error " + ex);
-        }
+        HashMap<String,String>Map=new HashMap<>();
+        Map.put("accessToken",accessToken);
+        Map.put("viewLink",viewLink);
+        DataClient.StartIntent(this,Map);
     }
 
+    public void prepareDashboard(JSONObject jBody)
+    {
+
+        Accounts.setOnClickListener(this);
+        Loan.setOnClickListener(this);
+        transfer.setOnClickListener(this);
+        Commodity.setOnClickListener(this);
+        try {
+            JSONArray jMenu = jBody.getJSONArray("menu");
+            for (int i = 0; i < jMenu.length(); i++) {
+                JSONObject menuItem = jMenu.getJSONObject(i);
+                if(menuItem.has("dashboard")){
+                    String type=menuItem.getString("dashboard");
+                    switch(type){
+                        case "account":
+                            AccountView=menuItem.getInt("key")+":0";
+                            break;
+                        case "loan":
+                            LoanView=menuItem.getInt("key")+":0";
+                            break;
+                        case "commodities":
+                            CommodityView = menuItem.getInt("key")+":0";
+                            break;
+                        case "transfers":
+                            TransfersView=menuItem.getInt("key")+":0";
+                            break;
+                    }
+                }
+            }
+        }
+        catch (JSONException ex)
+        {System.out.println("JSON Menu error " + ex);}
+    }
+
+    @Override
+    public void onClick(View view) {
+        HashMap<String,String>Map=new HashMap<>();
+        Map.put("accessToken",accessToken);
+
+        if(view.getId()==R.id.AccountButton){
+            Map.put("viewLink",AccountView);
+            DataClient.StartIntent(this,Map);}
+
+        if(view.getId()==R.id.LoanButton){
+            Map.put("viewLink",LoanView);
+            DataClient.StartIntent(this,Map);}
+
+        if(view.getId()==R.id.TransferButton){
+            Map.put("viewLink",TransfersView);
+            DataClient.StartIntent(this,Map);}
+
+        if(view.getId()==R.id.CommodityButton){
+            Map.put("viewLink",CommodityView);
+            DataClient.StartIntent(this,Map);}
+    }
 }

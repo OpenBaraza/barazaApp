@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.graphics.drawable.Drawable;
 
+import android.text.InputType;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.View;
@@ -23,9 +24,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -56,15 +59,24 @@ public class FormField {
     String spinnerItem;
     List<String> arrayKeys = null;
     List<String> arrayValues = null;
+    boolean edit;
+    String defaultValue;
 
     //Constructor to create views
     public FormField(JSONObject jsonObject, final ViewGroup viewGroup, final Activity activity) {
+        edit=false;
+        defaultValue=null;
         try{
             fieldName = jsonObject.getString("name");
             typeId = jsonObject.getInt("type");
             String title = "";
             if(jsonObject.has("title")) { title = jsonObject.getString("title"); }
             else if(jsonObject.has("tab")) { title = jsonObject.getString("tab"); }
+            if(jsonObject.has("data")){
+                edit=true;
+                defaultValue=jsonObject.getString("data");
+            }
+
 
 		    switch(typeId) {
 		        case 0:     // TEXTFIELD
@@ -74,6 +86,7 @@ public class FormField {
 		            editText = new EditText(new ContextThemeWrapper(activity, R.style.ButtonStyle));
                     editText.setMinWidth(500);
                     editText.setMaxWidth(700);
+                    if(edit){editText.setText(defaultValue);}
 		            viewGroup.addView(textView);
 		            viewGroup.addView(editText);
 		            break;
@@ -88,14 +101,23 @@ public class FormField {
 		            editText.setMaxLines(10);
 
 		            //Add the views to layout
+                    if(edit){editText.setText(defaultValue);}
 		            viewGroup.addView(textView);
 		            viewGroup.addView(editText);
 		            break;
 		        case 2:     // CHECKBOX
 		            checkBox = new CheckBox(activity);
 		            checkBox.setText(title);
-
+		            System.out.println("Check box default value on edit-----"+defaultValue);
 		            viewGroup.addView(checkBox);
+                    if(edit){
+                        if(defaultValue.equals("Yes")){
+                            checkBox.setChecked(true);
+                        }
+                        if(defaultValue.equals("No")){
+                            checkBox.setChecked(false);
+                        }
+                    }
 		            break;
 		        case 3:     // TEXTTIME
 		            break;
@@ -107,6 +129,8 @@ public class FormField {
                     editText.setMinWidth(500);
                     editText.setMaxWidth(700);
 					makeCalendar(activity);
+
+                  //  if(edit){editText.setText(defaultValue);}
 
 		            viewGroup.addView(textView);
 		            viewGroup.addView(editText);
@@ -127,6 +151,16 @@ public class FormField {
 		        case 8:     // SPINTIMESTAMP
 		            break;
 		        case 9:     // TEXTDECIMAL
+                    textView = new TextView(activity);
+                    textView.setText(title);
+
+                    editText = new EditText(new ContextThemeWrapper(activity, R.style.ButtonStyle));
+                    editText.setMinWidth(500);
+                    editText.setMaxWidth(700);
+                    if(edit){editText.setText(defaultValue);}
+                    editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+                    viewGroup.addView(textView);
+                    viewGroup.addView(editText);
 		            break;
 		        case 10:     // COMBOLIST
 		        case 11:     // COMBOBOX
@@ -152,7 +186,7 @@ public class FormField {
 
     public String getValue() {
 
-        System.out.println("BASE 4040 : " + fieldName);
+
 
         String value = null;
         switch(typeId) {
@@ -165,6 +199,7 @@ public class FormField {
             case 2:     // CHECKBOX
                 if(checkBox.isChecked()) value = "true";
                 else value = "false";
+                System.out.println("Checkbox output0--------"+value);
                 break;
             case 3:     // TEXTTIME
                 break;
@@ -181,6 +216,7 @@ public class FormField {
             case 8:     // SPINTIMESTAMP
                 break;
             case 9:     // TEXTDECIMAL
+                value = editText.getText().toString();
                 break;
             case 10:     // COMBOLIST
             case 11:     // COMBOBOX
@@ -200,6 +236,9 @@ public class FormField {
 	public void makeCalendar(final Activity activity) {
         //Datepicker
         myCalendar = Calendar.getInstance();
+        SimpleDateFormat DF=new SimpleDateFormat(   "dd-MMM-yyyy");
+        SimpleDateFormat OutputFormat=new SimpleDateFormat("dd/MM/yyyy");
+        Date editDate=null;
         // init - set date to current date
         long currentdate = System.currentTimeMillis();
         String dateString = sdf.format(currentdate);
@@ -209,6 +248,18 @@ public class FormField {
         editText.setFocusable(false);
 
         // set calendar date and update editDate
+        if(edit){
+            try {
+                editDate=DF.parse(defaultValue);
+                myCalendar.setTimeInMillis(editDate.getTime());
+                String date=OutputFormat.format(editDate);
+                editText.setText(date);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+
+
         date = new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker datePicker, int i, int i1, int i2) {
@@ -255,28 +306,35 @@ public class FormField {
             arrayKeys = new ArrayList<String>();
             arrayValues = new ArrayList<String>();
 
-		    String list = jsonObject.getString("list");
+		    String list = jsonObject.getString("list"),
+                    IdKey=jsonObject.getString("list_id"),
+                    ValueKey=jsonObject.getString("list_value");
+
 		    JSONArray jsonArray = new JSONArray(list);
 
 		    for (int i=0;i<jsonArray.length();i++){
                 JSONObject json = jsonArray.getJSONObject(i);
-		        JSONArray array = json.names();
-
-		        //Get the key at position 1
-		        //jsonKey = array.get(1).toString();
-		        //spinnerItem = json.getString(jsonKey);
-                jsonKey = json.getString(array.getString(0));
-                spinnerItem = json.getString(array.getString(1));
-
+                jsonKey = json.getString(IdKey);
+                spinnerItem = json.getString(ValueKey);
                 arrayKeys.add(jsonKey);
                 arrayValues.add(spinnerItem);
+                if(edit){
+                    if(jsonKey.equals(defaultValue)){
+                        defaultValue=spinnerItem;
+                    }
+                }
 		    }
 		    spinner = new Spinner(activity);
 
 		    ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(activity, R.layout.support_simple_spinner_dropdown_item, arrayValues);
 		    spinner.setAdapter(arrayAdapter);
-        } catch (JSONException ex) {
-            Log.e("JSONError", ex.toString());
+		    spinner.getAdapter();
+		    if(edit){
+                int index=arrayAdapter.getPosition(defaultValue);
+                spinner.setSelection(index);
+            }
+
         }
+        catch (JSONException ex) {Log.e("JSONError", ex.toString());}
 	}
 }

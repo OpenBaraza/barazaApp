@@ -1,10 +1,15 @@
 package com.dewcis.baraza;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
+import android.graphics.Typeface;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -37,7 +42,7 @@ import com.dewcis.baraza.Utils.DataClient;
  * Update by Joseph Onalo
  */
 
-public class TableActivity extends AppCompatActivity {
+public class TableActivity extends AppCompatActivity{
 
     String accessToken = null;
     String viewLink = null;
@@ -53,13 +58,25 @@ public class TableActivity extends AppCompatActivity {
     TableLayout gTableLayout;
     Spinner actionSpinner;
     Button btnActions;
+    FloatingActionButton floatingActionButton;
+    Resources resources;
+    TableRow.LayoutParams CellParams;
+    CoordinatorLayout coordinatorLayout;
+    Context context;
+
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_table);
+        context=this;
 
+        resources=this.getResources();
         tableRelativeView = findViewById(R.id.tableRelativeView);
         gTableLayout = findViewById(R.id.tableLayout);
+        CellParams=new TableRow.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        CellParams.setMargins(0,0,0,3);
+        coordinatorLayout=(CoordinatorLayout)findViewById(R.id.TableCoordinatorLayout);
+
 
         String viewName = "Table";
         Bundle extras = getIntent().getExtras();
@@ -68,8 +85,6 @@ public class TableActivity extends AppCompatActivity {
             viewLink = extras.getString("viewLink");
             viewName = extras.getString("viewName");
             linkValue = extras.getString("linkValue");
-            System.out.println("BASE 2010 " + accessToken);
-
             JSONObject jBody = DataClient.makeJSONRequest(accessToken, viewLink, "grid", "{}");
 
             // build the grid defination
@@ -82,13 +97,6 @@ public class TableActivity extends AppCompatActivity {
         getSupportActionBar().setTitle(viewName);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        FloatingActionButton btnAddForm = findViewById(R.id.btNewForm);
-        btnAddForm.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                addForm();
-            }
-        });
-
     }
 
     public void getGridDef(JSONObject jBody) {
@@ -99,10 +107,33 @@ public class TableActivity extends AppCompatActivity {
             if(jBody.has("actions")) makeActions(jBody);
 
             // Add the sub grids
-            if(jBody.has("views")) jViews= jBody.getJSONArray("views");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+            if(jBody.has("views")) {
+                boolean hasForm = false;
+                jViews = jBody.getJSONArray("views");
+                for(int j = 0; j < jViews.length(); j++) {
+                    JSONObject jView = jViews.getJSONObject(j);
+                    if(jView.getInt("typeId") == 7) hasForm = true;
+                }
+                if(hasForm) {CreateFormButton();}
+            }
+
+        } catch (JSONException e) {e.printStackTrace();}
+    }
+
+    public void CreateFormButton() {
+        floatingActionButton=new FloatingActionButton(this);
+        floatingActionButton.setImageResource(R.drawable.ic_action_plusb);
+        CoordinatorLayout.LayoutParams FabParams = new CoordinatorLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        FabParams.gravity=Gravity.END|Gravity.BOTTOM|Gravity.RIGHT;
+        floatingActionButton.setLayoutParams(FabParams);
+        floatingActionButton.setId(R.id.ActionFabID);
+        coordinatorLayout.addView(floatingActionButton);
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(DataClient.Connected(context)){addForm();}
+                else Toast.makeText(context,"Poor or no connection",Toast.LENGTH_LONG).show();}
+        });
     }
 
     // Recreate the table
@@ -130,24 +161,29 @@ public class TableActivity extends AppCompatActivity {
 
     public void tableTitle() {
         TableRow tbTitle = new TableRow(this);
-
+        TableLayout.LayoutParams RowParams = new TableLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         try {
             TextView thId = new TextView(this);
             thId.setText("#");
             thId.setPadding(4,2,4,2);
             tbTitle.addView(thId);
+            thId.setLayoutParams(CellParams);
 
             for(int i = 0; i < jGrid.length(); i++) {
                 JSONObject jTitle = jGrid.getJSONObject(i);
+
                 TextView th = new TextView(this);
+                th.setTypeface(null,Typeface.BOLD);
+                th.setTextColor(resources.getColor(R.color.black));
+                ColumnShader(i,th);
                 th.setText(jTitle.getString("title"));
+                th.setLayoutParams(CellParams);
+                th.setGravity(Gravity.CENTER);
                 th.setPadding(4,2,4,2);
                 tbTitle.addView(th);
             }
-        } catch(JSONException ex) {
-            ex.printStackTrace();
         }
-
+        catch(JSONException ex) {ex.printStackTrace();}
         gTableLayout.addView(tbTitle);
     }
 
@@ -162,6 +198,7 @@ public class TableActivity extends AppCompatActivity {
 
                 CheckBox keyBox = new CheckBox(this);
                 keyBox.setId(i);
+                keyBox.setLayoutParams(CellParams);
                 tbRow.addView(keyBox);
                 actionBoxes.put(jRow.getString("keyfield"), keyBox);
                 keyMap.put(i, jRow.getString("keyfield"));
@@ -169,10 +206,12 @@ public class TableActivity extends AppCompatActivity {
                 for (int j = 0; j < jGrid.length(); j++) {
                     JSONObject jHeader = jGrid.getJSONObject(j);
                     String fieldName = jHeader.getString("name");
-
                     TextView td = new TextView(this);
+                    ColumnShader(j,td);
                     td.setText(jRow.getString(fieldName));
                     td.setPadding(4, 2, 4, 2);
+                    td.setLayoutParams(CellParams);
+                    td.setGravity(Gravity.CENTER);
                     tbRow.addView(td);
                 }
                 gTableLayout.addView(tbRow);
@@ -182,10 +221,16 @@ public class TableActivity extends AppCompatActivity {
         }
     }
 
+    public void ColumnShader(int ColNumber, TextView cell) {
+        if(ColNumber==0 || ((ColNumber%2)==0)) cell.setBackground(resources.getDrawable(R.drawable.shade_1));
+        else cell.setBackground(resources.getDrawable(R.drawable.shade_2));
+    }
+
     public void addForm() {
         Intent formActivity = new Intent(this, FormActivity.class);
         formActivity.putExtra("accessToken", accessToken);
         formActivity.putExtra("viewLink", viewLink);
+        formActivity.putExtra("LinkedValue", linkValue);
         startActivity(formActivity);
     }
 
@@ -277,8 +322,6 @@ public class TableActivity extends AppCompatActivity {
             }
         }
 
-        System.out.println("BASE 1030 - Making menu");
-
         return true;
     }
 
@@ -289,9 +332,7 @@ public class TableActivity extends AppCompatActivity {
         if (menuItem.getItemId() < jViews.length()) {
             String selectedValue = getSelectedValue();
             if(selectedValue != null) openMenu(menuItem, selectedValue);
-        } else {
-            finish();
-        }
+        } else {finish();}
 
         return true;
     }
@@ -299,9 +340,16 @@ public class TableActivity extends AppCompatActivity {
     public void openMenu(MenuItem menuItem, String selectedValue) {
         System.out.println("BASE 2030 " + menuItem.getItemId());
         String newLink = viewLink + ":" + menuItem.getItemId();
-        DataClient.StartIntent(this,newLink,accessToken,selectedValue);
+        HashMap<String,String>Map=new HashMap<>();
+        Map.put("accessToken",accessToken);
+        Map.put("viewLink",newLink);
+        Map.put("linkValue",linkValue);
+        Map.put("keyValue",selectedValue);
+
+        DataClient.StartIntent(this,Map);
 
     }
+
 
     private String getSelectedValue() {
         if(actionBoxes!=null && !actionBoxes.isEmpty()){
