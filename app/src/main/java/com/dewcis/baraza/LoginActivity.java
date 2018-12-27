@@ -11,7 +11,6 @@ import android.app.ProgressDialog;
 import android.view.View;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -19,7 +18,6 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.dewcis.baraza.Utils.DataClient;
-import com.dewcis.baraza.Utils.URLs;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,10 +27,10 @@ import org.json.JSONObject;
  * Update by Joseph Onalo
  */
 
-public class LoginActivity extends AppCompatActivity implements Spinner.OnItemSelectedListener {
+public class LoginActivity extends AppCompatActivity {
 
     EditText etEmail, etPassword;
-    Button btnSignIn, btnRegister;
+    Button btnSignIn, btnRegister,btnLocation;
     ProgressDialog progressDialog;
     Spinner Apps;
 
@@ -49,7 +47,7 @@ public class LoginActivity extends AppCompatActivity implements Spinner.OnItemSe
         setContentView(R.layout.activity_login);
 
         Apps=(Spinner)findViewById(R.id.Apps);
-        String[] apps={"HR","Banking","Transport"};
+        String[] apps={"HR","Banking","Transport","Sacco","Chama","Property","Assets"};
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_spinner_item, apps);
         Apps.setAdapter(adapter);
@@ -69,6 +67,15 @@ public class LoginActivity extends AppCompatActivity implements Spinner.OnItemSe
                     signIn();
                 }
             });
+
+            btnLocation=findViewById(R.id.btnLocation);
+            btnLocation.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Location();
+                }
+            });
+            btnLocation.setVisibility(View.GONE);
 
             btnRegister = findViewById(R.id.btnRegister);
             btnRegister.setOnClickListener(new View.OnClickListener() {
@@ -90,6 +97,11 @@ public class LoginActivity extends AppCompatActivity implements Spinner.OnItemSe
     protected void onResume() {
         super.onResume();
         loadPreferences();
+    }
+
+    public void Location(){
+        Intent intent=new Intent(this,LocationActivity.class);
+        startActivity(intent);
     }
 
     private void savePreferences(){
@@ -127,7 +139,12 @@ public class LoginActivity extends AppCompatActivity implements Spinner.OnItemSe
         String url=null;
         if(selected.equals("HR")){url="https://demo.dewcis.com/hr/dataserver";}
         else if(selected.equals("Banking")){url="https://demo.dewcis.com/banking/dataserver";}
+        else if(selected.equals("Assets")){url="https://portal.dewcis.com/assets/dataserver";}
         else if(selected.equals("Transport")){url="https://demo.dewcis.com/agency/dataserver";}
+        else if(selected.equals("Chama")){url="https://demo.dewcis.com/chama/dataserver";}
+        else if(selected.equals("Sacco")){url="https://demo.dewcis.com/impress-sacco/dataserver";}
+        else if(selected.equals("Property")){url="https://demo.dewcis.com/property-portal/dataserver";}
+
         saveServiceType(selected);
         DataClient DC=new DataClient(url);
         String email = etEmail.getText().toString();
@@ -137,6 +154,9 @@ public class LoginActivity extends AppCompatActivity implements Spinner.OnItemSe
             if(jToken == null) {
                 String message = "Check on network connection";
                 Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+            }
+            else if(jToken.has("errorMessage")){
+                Toast.makeText(this,jToken.getString("errorMessage"),Toast.LENGTH_LONG).show();
             }
             else {
                 int ResultCode = jToken.getInt("ResultCode");
@@ -157,24 +177,21 @@ public class LoginActivity extends AppCompatActivity implements Spinner.OnItemSe
     }
 
     public void registerForm() {
-        Intent formActivity = new Intent(this, FormActivity.class);
-        formActivity.putExtra("viewLink", "1");
-        startActivity(formActivity);
-    }
-
-
-    @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         String selected=Apps.getSelectedItem().toString();
         String url=null;
         if(selected.equals("HR")){url="https://demo.dewcis.com/hr/dataserver";}
         else if(selected.equals("Banking")){url="https://demo.dewcis.com/banking/dataserver";}
         else if(selected.equals("Transport")){url="https://demo.dewcis.com/agency/dataserver";}
-
-        DataClient DC=new DataClient(selected);
-
-
+        else if(selected.equals("Chama")){url="https://demo.dewcis.com/chama/dataserver";}
+        else if(selected.equals("Sacco")){url="https://demo.dewcis.com/impress-sacco/dataserver";}
+        else if(selected.equals("Property")){url="https://demo.dewcis.com/property-portal/dataserver";}
+        saveServiceType(selected);
+        DataClient DC=new DataClient(url);
+        Intent formActivity = new Intent(this, FormActivity.class);
+        formActivity.putExtra("viewLink", "1");
+        startActivity(formActivity);
     }
+
     public void saveServiceType(String selection){
         SharedPreferences servicePreferences=getSharedPreferences("Services",Context.MODE_PRIVATE);
         SharedPreferences.Editor editor=servicePreferences.edit();
@@ -192,8 +209,4 @@ public class LoginActivity extends AppCompatActivity implements Spinner.OnItemSe
         }
     }
 
-    @Override
-    public void onNothingSelected(AdapterView<?> parent) {
-
-    }
 }

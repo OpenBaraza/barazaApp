@@ -16,11 +16,14 @@
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
 
     <ScrollView
+        android:id="@+id/TLscrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:minWidth="400dp"
         android:scrollbars="none"
-        android:layout_below="@id/formToolbar">
+        android:layout_margin="5dp"
+        android:layout_below="@id/formToolbar"
+        android:layout_above="@+id/saveButton">
         <TableLayout
             android:id="@+id/viewContainer"
             android:layout_width="match_parent"

@@ -4,11 +4,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -44,6 +46,8 @@ import com.dewcis.baraza.Utils.DataClient;
 
 public class TableActivity extends AppCompatActivity{
 
+    boolean mapOpened;
+
     String accessToken = null;
     String viewLink = null;
     String linkValue = null;
@@ -53,7 +57,6 @@ public class TableActivity extends AppCompatActivity{
 
     JSONArray jGrid = null;
     JSONArray jViews = null;
-
     RelativeLayout tableRelativeView;
     TableLayout gTableLayout;
     Spinner actionSpinner;
@@ -63,18 +66,27 @@ public class TableActivity extends AppCompatActivity{
     TableRow.LayoutParams CellParams;
     CoordinatorLayout coordinatorLayout;
     Context context;
+    boolean selectable;
+    JSONObject jBody,locationObject=null;
+    JSONArray jData;
 
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mapOpened=false;
+        jBody=null;
+        jData=null;
+        locationObject=new JSONObject();
         setContentView(R.layout.activity_table);
         context=this;
+        selectable=true;
 
         resources=this.getResources();
         tableRelativeView = findViewById(R.id.tableRelativeView);
         gTableLayout = findViewById(R.id.tableLayout);
-        CellParams=new TableRow.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        CellParams=new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT,1);
         CellParams.setMargins(0,0,0,3);
+
         coordinatorLayout=(CoordinatorLayout)findViewById(R.id.TableCoordinatorLayout);
 
 
@@ -85,17 +97,22 @@ public class TableActivity extends AppCompatActivity{
             viewLink = extras.getString("viewLink");
             viewName = extras.getString("viewName");
             linkValue = extras.getString("linkValue");
-            JSONObject jBody = DataClient.makeJSONRequest(accessToken, viewLink, "grid", "{}");
-
+            /*if(linkValue==null){
+                String key=extras.getString("keyValue");
+                if(key!=null){linkValue=key;}
+            }*/
+            jBody = DataClient.makeJSONRequest(accessToken, viewLink, "grid", "{}");
+            System.out.println("Table Activity viewlink-----"+viewLink);
+            System.out.println("Table Activity response-----"+jBody.toString());
             // build the grid defination
             getGridDef(jBody);
         }
 
-        // Place toolbar
         Toolbar myToolbar = findViewById(R.id.tableToolbar);
         setSupportActionBar(myToolbar);
         getSupportActionBar().setTitle(viewName);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
 
     }
 
@@ -116,6 +133,7 @@ public class TableActivity extends AppCompatActivity{
                 }
                 if(hasForm) {CreateFormButton();}
             }
+            if(!jBody.has("actions") && jBody.getJSONArray("views").length()<=0){selectable=false;}
 
         } catch (JSONException e) {e.printStackTrace();}
     }
@@ -140,7 +158,8 @@ public class TableActivity extends AppCompatActivity{
     public void refreshTable() {
         String myLink = viewLink;
         if(linkValue != null) myLink = viewLink + "&linkdata=" + linkValue;
-        JSONObject jBody = DataClient.makeJSONRequest(accessToken, myLink, "read", "{}");
+        jBody = DataClient.makeJSONRequest(accessToken, myLink, "read", "{}");
+        //System.out.println("\nTable activity link value---------"+linkValue+"\nTable activity data viewlink--------"+myLink+"\nTable Activity-------"+jBody);
         makeTable(jBody);
     }
 
@@ -149,29 +168,30 @@ public class TableActivity extends AppCompatActivity{
 
         try {
             tableTitle();
-
             if(jBody.has("data")) {
-                JSONArray jData = jBody.getJSONArray("data");
+                jData = jBody.getJSONArray("data");
+                System.out.println("\nTable Activity data\n"+jData.toString());
                 tableData(jData);
             }
-        } catch(JSONException ex) {
-            ex.printStackTrace();
         }
+        catch(JSONException ex) {ex.printStackTrace();}
     }
 
     public void tableTitle() {
         TableRow tbTitle = new TableRow(this);
-        TableLayout.LayoutParams RowParams = new TableLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        TableLayout.LayoutParams rowParams=new TableLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        tbTitle.setLayoutParams(rowParams);
         try {
-            TextView thId = new TextView(this);
-            thId.setText("#");
-            thId.setPadding(4,2,4,2);
-            tbTitle.addView(thId);
-            thId.setLayoutParams(CellParams);
+            if(selectable){
+                TextView thId = new TextView(this);
+                thId.setText("#");
+                thId.setLayoutParams(CellParams);
+                thId.setGravity(Gravity.CENTER);
+                tbTitle.addView(thId);
+            }
 
             for(int i = 0; i < jGrid.length(); i++) {
                 JSONObject jTitle = jGrid.getJSONObject(i);
-
                 TextView th = new TextView(this);
                 th.setTypeface(null,Typeface.BOLD);
                 th.setTextColor(resources.getColor(R.color.black));
@@ -179,7 +199,6 @@ public class TableActivity extends AppCompatActivity{
                 th.setText(jTitle.getString("title"));
                 th.setLayoutParams(CellParams);
                 th.setGravity(Gravity.CENTER);
-                th.setPadding(4,2,4,2);
                 tbTitle.addView(th);
             }
         }
@@ -187,38 +206,63 @@ public class TableActivity extends AppCompatActivity{
         gTableLayout.addView(tbTitle);
     }
 
+
     public void tableData(JSONArray jData) {
+        //keyMap stores the key and corresponding json object
         keyMap = new HashMap<Integer, String>();
         actionBoxes = new HashMap<String, CheckBox>();
 
         try {
+            boolean mapPresent=false;
+            String tempLatitude=null,tempLongitude=null;
+
             for(int i = 0; i < jData.length(); i++) {
                 TableRow tbRow = new TableRow(this);
+                TableLayout.LayoutParams rowParams=new TableLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                tbRow.setLayoutParams(rowParams);
                 JSONObject jRow = jData.getJSONObject(i);
-
-                CheckBox keyBox = new CheckBox(this);
-                keyBox.setId(i);
-                keyBox.setLayoutParams(CellParams);
-                tbRow.addView(keyBox);
-                actionBoxes.put(jRow.getString("keyfield"), keyBox);
+                if(jRow.has("existing_latitude") && jRow.getString("existing_latitude").length()>1){
+                    mapPresent=true;
+                    tempLatitude=jRow.getString("existing_latitude");
+                }
+                if(jRow.has("existing_longitude") && jRow.getString("existing_longitude").length()>1){
+                    mapPresent=true;
+                    tempLongitude=jRow.getString("existing_longitude");
+                }
+                if(selectable){
+                    CheckBox keyBox = new CheckBox(this);
+                    keyBox.setId(i);
+                    keyBox.setLayoutParams(CellParams);
+                    keyBox.setGravity(Gravity.CENTER);
+                    tbRow.addView(keyBox);
+                    actionBoxes.put(jRow.getString("keyfield"), keyBox);
+                }
                 keyMap.put(i, jRow.getString("keyfield"));
 
                 for (int j = 0; j < jGrid.length(); j++) {
+                    TableRow.LayoutParams cellParams=new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                    cellParams.setMargins(0,0,0,3);
                     JSONObject jHeader = jGrid.getJSONObject(j);
                     String fieldName = jHeader.getString("name");
                     TextView td = new TextView(this);
                     ColumnShader(j,td);
                     td.setText(jRow.getString(fieldName));
-                    td.setPadding(4, 2, 4, 2);
-                    td.setLayoutParams(CellParams);
                     td.setGravity(Gravity.CENTER);
+                    td.setLayoutParams(cellParams);
+                    //setPadding(td);
                     tbRow.addView(td);
                 }
                 gTableLayout.addView(tbRow);
             }
-        } catch(JSONException ex) {
-            ex.printStackTrace();
+            if(mapPresent && !mapOpened){
+                mapOpened=true;
+                Uri gmmIntentUri = Uri.parse("geo:"+tempLatitude+","+tempLongitude+"");
+                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+                mapIntent.setPackage("com.google.android.apps.maps");
+                startActivity(mapIntent);
+            }
         }
+        catch(JSONException ex) {ex.printStackTrace();}
     }
 
     public void ColumnShader(int ColNumber, TextView cell) {
@@ -251,17 +295,12 @@ public class TableActivity extends AppCompatActivity{
             if(jActionIds.length()>0) {
                 String actionLink = viewLink + "&action=" + aid.toString();
                 JSONObject jBody = DataClient.makeJSONRequest(accessToken, actionLink, "actions", jActionIds.toString());
-
-                // Show the new data
                 refreshTable();
-
-                // Show result message
                 String resultMsg = jBody.getString("ResultMsg");
                 Toast.makeText(this, resultMsg, Toast.LENGTH_LONG).show();
             }
-        } catch (JSONException ex) {
-            ex.printStackTrace();
         }
+        catch (JSONException ex) {ex.printStackTrace();}
     }
 
     public void makeActions(JSONObject jBody) {
@@ -275,9 +314,8 @@ public class TableActivity extends AppCompatActivity{
                 actionList.add(jAction.getInt("aid"));
                 spinnerItems.add(jAction.getString("action"));
             }
-        } catch (JSONException ex) {
-            ex.printStackTrace();
         }
+        catch (JSONException ex) {ex.printStackTrace();}
 
         // Create the action spinner
         actionSpinner = new Spinner(this);
@@ -317,9 +355,8 @@ public class TableActivity extends AppCompatActivity{
                     String viewName = JView.getString("name");
                     menu.add(0, i, Menu.NONE, viewName);
                 }
-            } catch (JSONException e) {
-                e.printStackTrace();
             }
+            catch (JSONException e) {e.printStackTrace();}
         }
 
         return true;
@@ -332,7 +369,8 @@ public class TableActivity extends AppCompatActivity{
         if (menuItem.getItemId() < jViews.length()) {
             String selectedValue = getSelectedValue();
             if(selectedValue != null) openMenu(menuItem, selectedValue);
-        } else {finish();}
+        }
+        else {finish();}
 
         return true;
     }
@@ -343,21 +381,19 @@ public class TableActivity extends AppCompatActivity{
         HashMap<String,String>Map=new HashMap<>();
         Map.put("accessToken",accessToken);
         Map.put("viewLink",newLink);
-        Map.put("linkValue",linkValue);
-        Map.put("keyValue",selectedValue);
-
+        if(linkValue!=null) { Map.put("linkValue",linkValue);}
+        Map.put("selectedValue",selectedValue);
+        //String selected = keyMap.get(selectedValue);
+        System.out.println("\nSelected value\n"+menuItem.getItemId());
         DataClient.StartIntent(this,Map);
-
     }
 
 
     private String getSelectedValue() {
         if(actionBoxes!=null && !actionBoxes.isEmpty()){
-            for (String key : actionBoxes.keySet()) {
-                if (actionBoxes.get(key).isChecked()) return key;
-            }
+            for (String key : actionBoxes.keySet()) {if (actionBoxes.get(key).isChecked()) return key;}
         }
-        Toast.makeText(this,"Sorry but you cannot use this feature without making a slection",Toast.LENGTH_LONG).show();
+        Toast.makeText(this,"Sorry but you cannot use this feature without making a selection",Toast.LENGTH_LONG).show();
         return null;
     }
 

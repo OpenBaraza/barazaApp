@@ -17,6 +17,7 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
@@ -61,11 +62,13 @@ public class FormField {
     List<String> arrayValues = null;
     boolean edit;
     String defaultValue;
+    String format;
 
     //Constructor to create views
     public FormField(JSONObject jsonObject, final ViewGroup viewGroup, final Activity activity) {
         edit=false;
         defaultValue=null;
+        format = "";
         try{
             fieldName = jsonObject.getString("name");
             typeId = jsonObject.getInt("type");
@@ -76,13 +79,10 @@ public class FormField {
                 edit=true;
                 defaultValue=jsonObject.getString("data");
             }
-
-
 		    switch(typeId) {
 		        case 0:     // TEXTFIELD
 		            textView = new TextView(activity);
 		            textView.setText(title);
-
 		            editText = new EditText(new ContextThemeWrapper(activity, R.style.ButtonStyle));
                     editText.setMinWidth(500);
                     editText.setMaxWidth(700);
@@ -94,13 +94,10 @@ public class FormField {
 					textView = new TextView(activity);
 		            textView.setText(title);
 		            textView.setPadding(10,10,10,10);
-
 		            editText = new EditText(new ContextThemeWrapper(activity, R.style.ButtonStyle));
                     editText.setMinWidth(500);
                     editText.setMaxWidth(700);
 		            editText.setMaxLines(10);
-
-		            //Add the views to layout
                     if(edit){editText.setText(defaultValue);}
 		            viewGroup.addView(textView);
 		            viewGroup.addView(editText);
@@ -108,15 +105,10 @@ public class FormField {
 		        case 2:     // CHECKBOX
 		            checkBox = new CheckBox(activity);
 		            checkBox.setText(title);
-		            System.out.println("Check box default value on edit-----"+defaultValue);
 		            viewGroup.addView(checkBox);
                     if(edit){
-                        if(defaultValue.equals("Yes")){
-                            checkBox.setChecked(true);
-                        }
-                        if(defaultValue.equals("No")){
-                            checkBox.setChecked(false);
-                        }
+                        if(defaultValue.equals("Yes")){ checkBox.setChecked(true); }
+                        if(defaultValue.equals("No")){ checkBox.setChecked(false); }
                     }
 		            break;
 		        case 3:     // TEXTTIME
@@ -124,25 +116,21 @@ public class FormField {
 		        case 4:     // TEXTDATE
 		            textView = new TextView(activity);
 		            textView.setText(title);
-
 	                editText = new EditText(activity);
                     editText.setMinWidth(500);
                     editText.setMaxWidth(700);
 					makeCalendar(activity);
-
-                  //  if(edit){editText.setText(defaultValue);}
-
 		            viewGroup.addView(textView);
 		            viewGroup.addView(editText);
 		            break;
 		        case 5:     // TEXTTIMESTAMP
 		            break;
 		        case 6:     // SPINTIME
+                    TableRow.LayoutParams rowParams=new TableRow.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT,1);
 		            textView = new TextView(activity);
+		            textView.setLayoutParams(rowParams);
 		            textView.setText(title);
-
 					makeTimePicker(activity);
-
 		            viewGroup.addView(textView);
 		            viewGroup.addView(timePicker);
 		            break;
@@ -153,7 +141,6 @@ public class FormField {
 		        case 9:     // TEXTDECIMAL
                     textView = new TextView(activity);
                     textView.setText(title);
-
                     editText = new EditText(new ContextThemeWrapper(activity, R.style.ButtonStyle));
                     editText.setMinWidth(500);
                     editText.setMaxWidth(700);
@@ -166,9 +153,7 @@ public class FormField {
 		        case 11:     // COMBOBOX
 		            textView = new TextView(activity);
 		            textView.setText(title);
-
 					makeComboBox(activity, jsonObject);
-
 		            viewGroup.addView(textView);
 		            viewGroup.addView(spinner);
 		            break;
@@ -179,15 +164,11 @@ public class FormField {
 		        case 18:     // PICTURE
 		            break;
 		    }
-        } catch (JSONException ex) {
-            Log.e("JSONError", ex.toString());
         }
+        catch (JSONException ex) { Log.e("JSONError", ex.toString()); }
     }
 
     public String getValue() {
-
-
-
         String value = null;
         switch(typeId) {
             case 0:     // TEXTFIELD
@@ -199,7 +180,6 @@ public class FormField {
             case 2:     // CHECKBOX
                 if(checkBox.isChecked()) value = "true";
                 else value = "false";
-                System.out.println("Checkbox output0--------"+value);
                 break;
             case 3:     // TEXTTIME
                 break;
@@ -209,7 +189,31 @@ public class FormField {
             case 5:     // TEXTTIMESTAMP
                 break;
             case 6:     // SPINTIME
-                value = editText.getText().toString();
+                int min=timePicker.getCurrentMinute();
+                int hour=timePicker.getCurrentHour();
+                String Hour=null,Min=null;
+
+                if (hour==0) {
+                    hour=12;
+                    format = "AM";
+                }
+                else if(hour==12) {format = "PM";}
+                else if(hour>12) {
+                    hour -= 12;
+                    format = "PM";
+                }
+                else {format = "AM";}
+
+
+                if(min<10){ Min="0"+min;} else Min=Integer.toString(min);
+                if(hour<10){ Hour="0"+hour;} else Hour=Integer.toString(hour);
+
+
+               /* if(hour==12 && format.equals("AM")){hour=00;}
+                else if(format.equals("PM") && hour!=12){hour+=12;}*/
+                value = Hour+":"+Min+" "+format;
+                System.out.println("\nSpinTime value\n"+value);
+
                 break;
             case 7:     // SPINDATE
                 break;
@@ -229,7 +233,6 @@ public class FormField {
             case 18:     // PICTURE
                 break;
         }
-
         return value;
     }
 
@@ -254,9 +257,8 @@ public class FormField {
                 myCalendar.setTimeInMillis(editDate.getTime());
                 String date=OutputFormat.format(editDate);
                 editText.setText(date);
-            } catch (ParseException e) {
-                e.printStackTrace();
             }
+            catch (ParseException e) {e.printStackTrace();}
         }
 
 
@@ -279,24 +281,30 @@ public class FormField {
         });
 	}
 
+	public String getFormat(){return format;}
 	public void makeTimePicker(final Activity activity) {
         timePicker = new TimePicker(activity);
-        timePicker.setPadding(10,10,10,10);
+        //TimePicker.LayoutParams TMparams= new TimePicker.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        //timePicker.setLayoutParams(TMparams);
+        TableRow.LayoutParams params =new TableRow.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT,3);
+
+        //amount of columns you will span
+        timePicker.setLayoutParams(params);
+        timePicker.setPadding(5,5,5,5);
         timePicker.setOnTimeChangedListener(new TimePicker.OnTimeChangedListener() {
             @Override
             public void onTimeChanged(TimePicker timePicker, int i, int i1) {
-                String format = "";
+
                 if (i==0) {
                     i+=12;
                     format = "AM";
-                } else if(i==12) {
-                    format = "PM";
-                } else if(i>12) {
+                }
+                else if(i==12) {format = "PM";}
+                else if(i>12) {
                     i -= 12;
                     format = "PM";
-                } else {
-                    format = "AM";
                 }
+                else {format = "AM";}
             }
         });
 	}
@@ -318,11 +326,7 @@ public class FormField {
                 spinnerItem = json.getString(ValueKey);
                 arrayKeys.add(jsonKey);
                 arrayValues.add(spinnerItem);
-                if(edit){
-                    if(jsonKey.equals(defaultValue)){
-                        defaultValue=spinnerItem;
-                    }
-                }
+                if(edit){ if(jsonKey.equals(defaultValue)){defaultValue=spinnerItem;} }
 		    }
 		    spinner = new Spinner(activity);
 

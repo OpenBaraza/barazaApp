@@ -72,10 +72,6 @@ public class MainDesk extends AppCompatActivity implements View.OnClickListener 
         NavigationView navigationView = findViewById(R.id.navigation);
         Menu menu = navigationView.getMenu();
 
-        System.out.println("BASE 2005 " + accessToken);
-
-
-
         String rBody = DataClient.makeSecuredRequest(accessToken, "view=0:0", "menu", "{}");
         JSONObject jBody = DataClient.getJObject(rBody);
 
@@ -94,9 +90,8 @@ public class MainDesk extends AppCompatActivity implements View.OnClickListener 
                 JSONObject menuItem = jMenu.getJSONObject(i);
                 menu.add(0, menuItem.getInt("key"),Menu.NONE, menuItem.getString("name"));
             }
-        } catch (JSONException ex) {
-            System.out.println("JSON Menu error " + ex);
         }
+        catch (JSONException ex) { System.out.println("JSON Menu error " + ex); }
 
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override

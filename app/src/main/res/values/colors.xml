@@ -3,9 +3,13 @@
     <color name="colorPrimary">#1478be</color>
     <color name="colorPrimaryDark">#2956a1</color>
     <color name="colorAccent">#4a8b2c</color>
+    <color name="colorPrimaryLight">#5da7f1</color>
     <color name="signInColor">#92ccf2</color>
+    <color name="Shade1">#92ccf2</color>
+    <color name="Shade2">#609bbf</color>
     <color name="white">#ffffff</color>
     <color name="silver">#c0c0c0</color>
     <color name="buttonColor">#FFF</color>
     <color name="background">#006064</color>
+    <color name="black">#000000</color>
 </resources>
