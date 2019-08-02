@@ -30,6 +30,7 @@ public class ReportActivity extends AppCompatActivity {
         String viewName = "Leave Report";
         String rBody = "";
         Bundle extras = getIntent().getExtras();
+
         if(extras != null) {
             accessToken = extras.getString("accessToken");
             viewLink = extras.getString("viewLink");

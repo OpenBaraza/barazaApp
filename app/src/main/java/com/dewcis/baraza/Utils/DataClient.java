@@ -209,8 +209,12 @@ public class DataClient {
                 context.startActivity(intent);
             }
             catch (JSONException ex)  { Toast.makeText(context,"Sorry ,format error has occured",Toast.LENGTH_LONG).show();}
-            catch (NullPointerException ex)  { Toast.makeText(context,"Sorry ,this feature is currently unavailbale",Toast.LENGTH_LONG).show();}
+            catch (NullPointerException ex)  {
+                Toast.makeText(context,"Sorry ,this feature is currently unavailbale",Toast.LENGTH_LONG).show();
+                ex.printStackTrace();
+            }
         }
         else Toast.makeText(context,"Poor or no network connection",Toast.LENGTH_LONG).show();
     }
+
 }
