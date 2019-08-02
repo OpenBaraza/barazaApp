@@ -1,4 +1,5 @@
 <resources>
+    <string name="google_maps_api_key">AIzaSyDuL-CnxVHcAHjEkg7I--WJxjEZz5tr3nI</string>
     <string name="app_name">Baraza</string>
     <string name="username">Username</string>
     <string name="password">Password</string>

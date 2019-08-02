@@ -43,6 +43,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:orientation="vertical">
+
+
+
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -127,6 +130,9 @@
                             </LinearLayout>
 
                         </LinearLayout>
+
+
+
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -178,10 +184,188 @@
 
                         </LinearLayout>
 
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="5dp">
+                            <LinearLayout
+                                android:id="@+id/parking"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="60dp"
+                                android:orientation="vertical"
+                                android:layout_margin="5dp"
+                                android:elevation="10dp"
+                                android:background="@drawable/button"
+                                >
+                                <ImageView
+                                    android:layout_weight="8"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="0dp"
+                                    android:src="@drawable/ic_local_parking_black_24dp"
+                                    android:layout_marginBottom="2dp"/>
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="0dp"
+                                    android:layout_weight="3"
+                                    android:layout_gravity="center"
+                                    android:textSize="12sp"
+                                    android:text="Parking"
+                                    android:gravity="center"
+                                    android:background="@drawable/bottom_shadow"/>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/land"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="60dp"
+                                android:orientation="vertical"
+                                android:layout_margin="5dp"
+                                android:elevation="10dp"
+                                android:background="@drawable/button"
+                                >
+                                <ImageView
+                                    android:layout_weight="8"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="0dp"
+                                    android:src="@drawable/ic_land"
+                                    android:layout_marginBottom="2dp"/>
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="0dp"
+                                    android:layout_weight="3"
+                                    android:layout_gravity="center"
+                                    android:textSize="12sp"
+                                    android:text="Land"
+                                    android:gravity="center"
+                                    android:background="@drawable/bottom_shadow"/>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/market"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="60dp"
+                                android:orientation="vertical"
+                                android:layout_margin="5dp"
+                                android:elevation="10dp"
+                                android:background="@drawable/button"
+                                >
+                                <ImageView
+                                    android:layout_weight="8"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="0dp"
+                                    android:src="@drawable/ic_shopping_basket_black_24dp"
+                                    android:layout_marginBottom="2dp"/>
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="0dp"
+                                    android:layout_weight="3"
+                                    android:layout_gravity="center"
+                                    android:textSize="12sp"
+                                    android:text="Market"
+                                    android:gravity="center"
+                                    android:background="@drawable/bottom_shadow"/>
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+
+
+
+
+
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="5dp">
+                            <LinearLayout
+                                android:id="@+id/AccountCC"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="60dp"
+                                android:orientation="vertical"
+                                android:layout_margin="5dp"
+                                android:elevation="10dp"
+                                android:background="@drawable/button"
+                                >
+                                <ImageView
+                                    android:layout_weight="8"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="0dp"
+                                    android:src="@drawable/ic_my_account"
+                                    android:layout_marginBottom="2dp"/>
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="0dp"
+                                    android:layout_weight="3"
+                                    android:layout_gravity="center"
+                                    android:textSize="12sp"
+                                    android:text="My Account"
+                                    android:gravity="center"
+                                    android:background="@drawable/bottom_shadow"/>
+                            </LinearLayout>
+                            <LinearLayout
+                                android:id="@+id/Rent"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="60dp"
+                                android:orientation="vertical"
+                                android:layout_margin="5dp"
+                                android:elevation="10dp"
+                                android:background="@drawable/button"
+                                >
+                                <ImageView
+                                    android:layout_weight="8"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="0dp"
+                                    android:src="@drawable/ic_rent"
+                                    android:layout_marginBottom="2dp"/>
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="0dp"
+                                    android:layout_weight="3"
+                                    android:layout_gravity="center"
+                                    android:textSize="12sp"
+                                    android:text="Rent"
+                                    android:gravity="center"
+                                    android:background="@drawable/bottom_shadow"/>
+                            </LinearLayout>
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="60dp"
+                                android:orientation="vertical"
+                                android:layout_margin="5dp"
+                                android:elevation="10dp"
+                                >
+                            </LinearLayout>
+
+                        </LinearLayout>
+                        <Button
+                            android:id="@+id/TestActivity"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="test page"
+                            android:layout_gravity="bottom"
+                            />
+
                     </LinearLayout>
 
 
+
                 </ScrollView>
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_weight="8"
+                    android:src="@drawable/ic_commodities" />
 
             </RelativeLayout>
 
