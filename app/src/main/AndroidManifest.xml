@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <application
         android:name="android.support.multidex.MultiDexApplication"
@@ -27,7 +28,20 @@
         <activity android:name=".TableActivity" />
         <activity android:name=".FormViewActivity" />
         <activity android:name=".FormActivity" />
-        <activity android:name=".LocationActivity"></activity>
+        <activity android:name=".LocationActivity" />
+        <activity android:name=".Land" />
+        <activity android:name=".Market" />
+        <activity android:name=".Parking" />
+        <activity android:name=".Rent" />
+        <activity android:name=".Payment" />
+        <activity android:name=".TestActivity" />
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/google_maps_api_key" />
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
     </application>
 
 </manifest>
